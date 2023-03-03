@@ -35,25 +35,25 @@ func TestParseMagnet(t *testing.T) {
 
 func TestParseInvalidMagnet(t *testing.T) {
 	_, err := ParseMagnet(uri_no_tr)
-	assert.Equal(t, err, fmt.Errorf("magnet link is missing 'address trackers' parameter"))
+	assert.Equal(t, err, fmt.Errorf(errMissingAddressTrackers))
 }
 
 func TestMissingXt(t *testing.T) {
 	_, err := ParseMagnet(uri_no_xt)
-	assert.Equal(t, err, fmt.Errorf("magnet link is missing the 'exact topic' parameter"))
+	assert.Equal(t, err, fmt.Errorf(errMissingExactTopic))
 }
 
 func TestMalformedXt(t *testing.T) {
 	_, err := ParseMagnet(uri_malformed_xt)
-	assert.Equal(t, err, fmt.Errorf("malformed 'exact topic'"))
+	assert.Equal(t, err, fmt.Errorf(errMalformedExactTopic))
 }
 
 func TestInvalidXt(t *testing.T) {
 	_, err := ParseMagnet(uri_invalid_xt)
-	assert.Equal(t, err, fmt.Errorf("error decoding 'exact topic'"))
+	assert.Equal(t, err, fmt.Errorf(errDecodeExactTopic))
 }
 
 func TestInvalidScheme(t *testing.T) {
 	_, err := ParseMagnet(uri_invalid_scheme)
-	assert.Equal(t, err, fmt.Errorf("unexpected url scheme"))
+	assert.Equal(t, err, fmt.Errorf(errUnexpectedURLScheme))
 }

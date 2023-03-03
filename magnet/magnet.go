@@ -15,17 +15,28 @@ type Magnet struct {
 	Params      url.Values
 }
 
+const (
+	errCouldNotParseURI        = "could not parse uri"
+	errUnexpectedURLScheme     = "unexpected url scheme"
+	errMissingExactTopic       = "magnet link is missing the 'exact topic' parameter"
+	errMissingDisplayNameParam = "magnet link is missing 'display name' parameter"
+	errMissingAddressTrackers  = "magnet link is missing 'address trackers' parameter"
+	errMalformedExactTopic     = "malformed 'exact topic'"
+	errDecodeExactTopic        = "error decoding 'exact topic'"
+	errUnsupportedExactTopic   = "unsupported encoding of 'exact topic'"
+)
+
 const exactTopicPrefix = "urn:btih:"
 
 func ParseMagnet(uri string) (magnet Magnet, err error) {
 	parsedUrl, err := url.Parse(uri)
 	if err != nil {
-		err = fmt.Errorf("could not parse uri")
+		err = fmt.Errorf(errCouldNotParseURI)
 		return
 	}
 
 	if parsedUrl.Scheme != "magnet" {
-		err = fmt.Errorf("unexpected url scheme")
+		err = fmt.Errorf(errUnexpectedURLScheme)
 		return
 	}
 
@@ -59,7 +70,7 @@ func dropProcessedParametersFromQuery(query url.Values, keys ...string) {
 
 func extractDisplayName(query url.Values) (dn string, err error) {
 	if !query.Has("dn") {
-		err = fmt.Errorf("magnet link is missing 'display name' parameter")
+		err = fmt.Errorf(errMissingDisplayNameParam)
 		return
 	}
 
@@ -73,7 +84,7 @@ func extractDisplayName(query url.Values) (dn string, err error) {
 // Extracts all the address trackers (&tr) parameters into a slice of strings
 func extractAddressTrackers(query url.Values) (trackers []string, err error) {
 	if !query.Has("tr") {
-		err = fmt.Errorf("magnet link is missing 'address trackers' parameter")
+		err = fmt.Errorf(errMissingAddressTrackers)
 		return
 	}
 
@@ -88,14 +99,14 @@ func extractAddressTrackers(query url.Values) (trackers []string, err error) {
 // and decodes it to the [20]byte info hash of the torrent.
 func decodeExactTopic(query url.Values) (infoHash [20]byte, err error) {
 	if !query.Has("xt") {
-		err = fmt.Errorf("magnet link is missing the 'exact topic' parameter")
+		err = fmt.Errorf(errMissingExactTopic)
 		return
 	}
 
 	xt := query.Get("xt")
 
 	if !strings.HasPrefix(xt, exactTopicPrefix) {
-		err = fmt.Errorf("malformed 'exact topic'")
+		err = fmt.Errorf(errMalformedExactTopic)
 		return
 	}
 
@@ -103,12 +114,12 @@ func decodeExactTopic(query url.Values) (infoHash [20]byte, err error) {
 
 	bytesWritten, err := decode(infoHash[:], []byte(hashString))
 	if err != nil {
-		err = fmt.Errorf("error decoding 'exact topic'")
+		err = fmt.Errorf(errDecodeExactTopic)
 		return
 	}
 
 	if bytesWritten != 20 {
-		err = fmt.Errorf("error decoding 'exact topic'")
+		err = fmt.Errorf(errDecodeExactTopic)
 		return
 	}
 
@@ -128,5 +139,5 @@ func decode(dst []byte, src []byte) (int, error) {
 		return base32.StdEncoding.Decode(dst, src)
 	}
 
-	return 0, fmt.Errorf("unsupported encoding of 'exact topic'")
+	return 0, fmt.Errorf(errUnsupportedExactTopic)
 }
